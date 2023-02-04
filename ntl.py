@@ -10,7 +10,8 @@ been favored over both performance and generality for functions that do
 not have a direct impact on the performance of the Number Theoretic
 Transform. Such functions include primality tests, "NTT friendly" prime
 generation, and primitive root tests and generation. All algorithms
-used are widely known. For more general high-performance number theoretic libraries, see Shoup's NTL or Intel's HEXL library.
+used are widely known. For more general high-performance number
+theoretic libraries, see Shoup's NTL or Intel's HEXL library.
 
 """
 
