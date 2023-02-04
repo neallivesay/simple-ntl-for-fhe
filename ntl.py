@@ -3,7 +3,7 @@ A simple Number Theoretic Library for FHE (Python version)
 
 A library to support the implementation of high-performance Number
 Theoretic Transforms (NTTs)---i.e., the Fast Fourier Transforms for a
-field of prime size---especially in the context of Fully Homomorphic 
+field of prime size---especially in the context of Fully Homomorphic
 Encryption (FHE). This library is designed to be small, easy to
 understand, easy to use, and have minimal dependencies. Simplicity has
 been favored over both performance and generality for functions that do
