@@ -1,23 +1,26 @@
 r"""
 A simple Number Theoretic Library for FHE (Python version)
 
-A small library of functions for implementing negacyclic convolution
-(aka "polynomial multiplication"), the main operation in (most) Fully
-Homomorphic Encryption (FHE) schemes. This library is designed to be
-easy to understand and use, and may be used by beginners before
-transitioning to high-performance libraries such as HEXL or Shoup's
-NTL.
-
-References
-----------
-TODO
+A library to support the implementation of high-performance Number
+Theoretic Transforms (NTTs)---i.e., the Fast Fourier Transforms for a
+field of prime size---especially in the context of Fully Homomorphic 
+Encryption (FHE). This library is designed to be small, easy to
+understand, easy to use, and have minimal dependencies. Simplicity has
+been favored over both performance and generality for functions that do
+not have a direct impact on the performance of the Number Theoretic
+Transform. Such functions include primality tests, "NTT friendly" prime
+generation, and primitive root tests and generation. All algorithms
+used are widely known. For more general high-performance number theoretic libraries, see Shoup's NTL or Intel's HEXL library.
 
 """
 
-import numpy as np
+##### functions related to binary representations  #####
 
 def is_power_of_two(n: int) -> bool:
-    r""" Determines if an integer is a power of two.
+    r""" Tests if integer is a power of two.
+
+    Determines if `n` is a power of two. Note `n` is a power of two if
+    and only if its Hamming weight equals one.
     
     Examples
     --------
@@ -31,23 +34,56 @@ def is_power_of_two(n: int) -> bool:
     """
     return not n & (n-1)
 
-def leng(n: int) -> int:
-    r""" Bit-length of an integer.
+def bit_reverse(x: int, bit_length: int):
+    r""" Reverses the order of bits in binary representation.
 
-    Returns the bit-length---i.e., the number of bits in the binary
-    representation---of a nonnegative integer.
+    Assume `x` is an integer with length at most `bit_length`. Bit-
+    reversal maps `x` to the integer whose binary representation has 
+    the same bits, but in reverse order. For example, a 3-bit bit-
+    reversal maps the integer 1 (i.e., 001 in binary) to 4 (100), 
+    2 (010) to 2 (010), and 3 (011) to 6 (110).
 
     Examples
     --------
-    >>> leng(7)
-    3
-    >>> leng(8)
+    >>> bit_reverse(1, 3)
     4
-    >>> leng(9)
-    4
+    >>> bit_reverse(3, 3)
+    6
+    >>> bit_reverse(5, 4)
+    10
 
     """
-    return 1+leng(n>>1) if n else 0
+    result = 0
+    while bit_length > 0:
+        result <<= 1
+        result = (x & 1) | result
+        x >>= 1
+        bit_length -= 1
+    return result
+
+def bit_reverse_permute(x: list) -> list:
+    r""" Bit-reversal permutation.
+
+    Assumes the length of the list `x` is a power, say `k`, of two.
+    Permutes the entries `x` by mapping `x[i]` to `x[br(i)]`, where 
+    `br` denotes the `k`-bit bit-reversal. Modifies `x` in-place.
+
+    >>> bit_reverse_permute([0, 1, 2, 3])
+    [0, 2, 1, 3]
+    >>> bit_reverse_permute([0, 1, 2, 3, 4, 5, 6, 7])
+    [0, 4, 2, 6, 1, 5, 3, 7]
+
+    """
+    if not is_power_of_two(len(x)):
+        raise ValueError('x must be a list of length a power of two')
+    k = len(x).bit_length() - 1
+    for i in range(len(x)):
+        br_i = bit_reverse(i, k)
+        if i < br_i:
+            x[i], x[br_i] = x[br_i], x[i]
+    return x
+
+##### functions related to primality testing and generation #####
 
 def isqrt(k: int) -> int:
     r""" The integer square root function.
@@ -83,9 +119,9 @@ def is_prime(x: int) -> bool:
     Notes
     -----
     Slow, brute-force implementation. Note that probabilistic primality
-    tests (such as Miller--Rabin) can offer vastly superior 
-    performance at the cost of introducing a small likelihood of 
-    returning a false positive.
+    tests (such as Miller--Rabin) can offer vastly superior performance
+    at the cost of introducing a small likelihood of returning a false
+    positive.
 
     Examples
     --------
@@ -105,14 +141,13 @@ def is_prime(x: int) -> bool:
 def is_probably_prime(x: int) -> bool:
     r""" Probabilistic primality test.
 
-    Determines if an integer (greater than two) is "probably" prime;
-    returns some false positives (called "Fermat pseudoprimes"), and
-    never returns false negatives
+    Determines if an integer (greater than two) is "probably" prime.
+    May return a false positive, but never returns false negatives
 
     Notes
     -----
     A simple probabilistic primality test based on Fermat's Little
-    Theorem. An example Fermat pseudoprime is `341`. A more accurate
+    Theorem. An example false positive is `341`. A more accurate
     probabilistic primality test is Miller--Rabin.
 
     Examples
@@ -127,31 +162,43 @@ def is_probably_prime(x: int) -> bool:
     """
     return pow(2, x-1, x) == 1
 
-def generate_ntt_friendly_prime(N: int, length: int, k: int) -> int:
-    r""" Returns an NTT friendly prime.
+def generate_ntt_friendly_prime(N: int, leng: int, start=1) -> int:
+    r""" Generates NTT friendly primes of a given bit-length.
 
-    Returns `k`th NTT friendly prime for `N` with bit-length `length`.
-    (If more than `k` NTT friendly primes exist, then `0` is returned.)
+    Generates primes with bit-length `leng` that are "NTT friendly" for
+    a power of two `N`, i.e., primes `q` with the property that `N`
+    divides `q-1`. Yields all such primes in ascending order, starting
+    with the `start`th such prime.
 
-    TODO
-    OUTPUT: the kth "NTT-friendly" prime for N;
-    i.e., the kth prime q with the property that N divides q-1
+    Examples
+    --------
+    >>> g = generate_ntt_friendly_prime(2**16, 30)
+    >>> next(g)
+    537133057
+    >>> next(g)
+    537591809
+    
     """
-    if not k>0: raise ValueError('input `k` must be positive integer')
-    if not is_power_of_two(N): raise ValueError('input `N` must be ' +
-                                        'power of `2` (e.g. `2**16`)')
-    if not length>0:
-        raise ValueError('input `length` must be positive (e.g. `30`)')
-    # TODO
-    good_prime = (1<<(length-1))+1
-    if k==1 and is_prime(good_prime):
-        return good_prime
-    while k>0 and leng(good_prime)==length:
-        good_prime += N
-        while not is_prime(good_prime):
-            good_prime += N
-        k -= 1
-    return good_prime if (k==0 and leng(good_prime)==length) else 0
+    if not start>0:
+        raise ValueError('input `start` must be positive integer')
+    if not is_power_of_two(N):
+        raise ValueError('input `N` must be power of two')
+    if not leng>0:
+        raise ValueError('input `leng` must be positive')
+
+    # start with the smallest `leng`-bit candidate for an NTT prime
+    ntt_prime = (1<<(leng-1))+1 
+    while start > 0:
+        while not is_prime(ntt_prime):
+            ntt_prime += N
+        start -= 1
+    while ntt_prime.bit_length() == leng:
+        yield ntt_prime
+        ntt_prime += N
+        while ntt_prime.bit_length()==leng and not is_prime(ntt_prime):
+            ntt_prime += N
+
+##### modular arithmetic functions #####
 
 def modular_inverse_prime(x: int, q: int) -> int:
     r""" Modular multiplicative inverse, specialized for prime modulus.
@@ -161,7 +208,7 @@ def modular_inverse_prime(x: int, q: int) -> int:
     Notes
     -----
     Simple implementation based on Fermat's Little Theorem. Modular 
-    inversion for general, not-necessarily-prime moduli can be 
+    inversion for general, not-necessarily-prime moduli can be
     implemented via the Extended Euclidean Algorithm.
 
     Examples
@@ -176,92 +223,63 @@ def modular_inverse_prime(x: int, q: int) -> int:
     """
     return pow(x, q-2, q)
 
-##### functions related to primitive roots of unity modulo q #####
+##### functions related to roots of unity #####
 
 def is_primitive(x: int, N: int, q: int) -> bool:
-    r""" A special case primitive root test.
+    r""" A (special case) primitive root test.
 
-    Tests whether an integer `x` is a primitive `N`th root of unity 
-    modulo a prime `q`. Assumes that `q` is an "NTT friendly prime"
-    with respect to `N`, i.e., that `N` is a power of two integer 
-    dividing `q-1`.
-
-    Notes
-    -----
-    TODO - is N dividing q-1 necessary?
+    Tests if an integer `x` is a primitive `N`th root of unity modulo a
+    prime `q`. Assumes `N` is a power of two integer dividing `q-1` (a
+    standard baseline assumption when implementating of the NTT).
 
     Examples
     --------
     >>> is_primitive(9, 8, 17)
-    True 
+    True
     >>> is_primitive(13, 8, 17)
     False
 
     """
     return pow(x, N//2, q) == q-1
 
-def gen_primitive_root(n: int, q: int) -> int:
-    r""" INPUT: q prime, n a power of 2, with n dividing q-1
-    OUTPUT: returns a primitive nth root of unity modulo q
-    REFERENCE: https://crypto.stackexchange.com/questions/63614
-    >>> gen_primitive_root(8, 17)==9 and gen_primitive_root(16, 97)==8
-    True
-    """
-    assert is_prime(q), "q must be prime"
-    assert is_power_of_two(n), "n must be power of 2"
-    assert (q-1) % n == 0, "n must divide q-1"
-    def make_root(i: int) -> int:
-        ''' NOTE: i**((q-1)/n) is always a root modulo q '''
-        return pow_mod(i, (q-1)//n, q)
+def primitive_root(N: int, q: int) -> int:
+    r""" Returns a primitive root of unity.
 
-    for p in range(2,q):
-        if pow_mod(make_root(p), n//2, q) != 1:
-            return make_root(p)
-    assert False, "primitive root not found. there exists a critical error in implementation"
-
-##### functions related to bit-reversal #####
-
-def bit_reverse(x: int, bit_length: int):
-    r""" Reverses the order of bits in binary representation.
-
-    Assume `x` is an integer with length at most `bit_length`. Bit-
-    reversal maps `x` to the integer whose binary representation has 
-    the same bits, but in reverse order. For example, a 3-bit bit-
-    reversal maps the integer 1 (i.e., 001 in binary) to 4 (100), 
-    2 (010) to itself, and 3 (011) to 6 (110).
+    Returns a primitive `N`th root of unity modulo a prime `q`. Assumes
+    `N` is a power of two dividing `q-1` (a standard baseline 
+    assumption when implementing the NTT).
+    
+    Notes
+    -----
+    Given the assumptions on `N` and `q` above, there are exactly `N`
+    `N`th roots of unity modulo `q`, with exactly half being primitive.
+    A brute-force approach to finding one of these primitive roots
+    might involve searching through all integers from `1` to `q-1` and
+    testing if it is a primitive root. As the likelihood of any given
+    integer being a root is '(q-1)/N', this search can be slow when `q`
+    is large relative to `N`. The implementation below uses an 
+    alternative approach, leveraging the fact that if `x` is nonzero,
+    then `x` raised to the power of `(q-1)/N` is always a root. The 
+    likelihood of a root being primitive (given the above assumptions)
+    is `1/2`.
 
     Examples
     --------
-    >>> bit_reverse(1, 3)
-    4
-    >>> bit_reverse(3, 3)
-    6
-    >>> bit_reverse(5, 4)
-    10
+    >>> is_primitive(primitive_root(16, 97), 16, 97)
+    True
 
     """
-    result = 0
-    while bit_length > 0:
-        result <<= 1
-        result = (x & 1) | result
-        x >>= 1
-        bit_length -= 1
-    return result
+    if not is_prime(q): raise ValueError('q must be prime')
+    if not is_power_of_two(N): raise ValueError('N must be power of 2')
+    if (q-1) % N != 0: raise ValueError('N must divide q-1')
 
-def bit_reverse_permute(x: np.array):
-    '''in-place bit reverse permutation
-    >>> bit_reverse_permute([0, 1, 2, 3, 4, 5, 6, 7])
-    [0, 4, 2, 6, 1, 5, 3, 7]
-    '''
-    assert is_power_of_two(len(x)), "x must have length a power of 2"
-    for i in range(len(x)):
-        bit_reversed_index = bit_reverse(i, leng(len(x))-1)
-        if i < bit_reversed_index:
-            x[i], x[bit_reversed_index] = x[bit_reversed_index], x[i]
-    return x
+    def make_root(x: int) -> int:
+        return pow(x, (q-1)//N, q)
 
-# if this file is run directly from command line, then doctests are run
+    for x in range(2, q):
+        if is_primitive(make_root(x), N, q):
+            return make_root(x)
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
