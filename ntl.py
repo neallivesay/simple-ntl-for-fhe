@@ -69,6 +69,8 @@ def bit_reverse_permute(x: list) -> list:
     Permutes the entries `x` by mapping `x[i]` to `x[br(i)]`, where 
     `br` denotes the `k`-bit bit-reversal. Modifies `x` in-place.
 
+    Examples
+    --------
     >>> bit_reverse_permute([0, 1, 2, 3])
     [0, 2, 1, 3]
     >>> bit_reverse_permute([0, 1, 2, 3, 4, 5, 6, 7])
