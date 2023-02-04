@@ -1,8 +1,3 @@
 # simple Number Theoretic Library for FHE
 
-A small library of functions for implementing negacyclic convolution
-(aka "polynomial multiplication"), the main operation in (most) Fully
-Homomorphic Encryption (FHE) schemes. This library is designed to be
-easy to understand and use, and may be particularly useful for beginners before
-transitioning to high-performance libraries such as HEXL or Shoup's
-NTL.
+A small library to support the implementation of high-performance Number Theoretic Transforms (i.e., the Fast Fourier Transforms for a field of prime size) in the context of Fully Homomorphic Encryption (FHE). This library is designed to be easy to understand and use. Simplicity has been favored over both performance and generality for all functions that do not have a direct impact on the performance of the Number Theoretic Transform (e.g., primality tests). For more general high-performance number theoretic libraries, see Shoup's NTL or Intel's HEXL library.
