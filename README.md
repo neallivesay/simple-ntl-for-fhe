@@ -1,4 +1,4 @@
-# A simple Number Theoretic Library for FHE
+# simple Number Theoretic Library for FHE
 
 A small library of functions for implementing negacyclic convolution
 (aka "polynomial multiplication"), the main operation in (most) Fully
