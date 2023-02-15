@@ -259,7 +259,7 @@ def primitive_root(N: int, q: int) -> int:
     A brute-force approach to finding one of these primitive roots
     might involve searching through all integers from `1` to `q-1` and
     testing if it is a primitive root. As the likelihood of any given
-    integer being a root is '(q-1)/N', this search can be slow when `q`
+    integer being a root is `(q-1)/N`, this search can be slow when `q`
     is large relative to `N`. The implementation below uses an 
     alternative approach, leveraging the fact that if `x` is nonzero,
     then `x` raised to the power of `(q-1)/N` is always a root. The 
