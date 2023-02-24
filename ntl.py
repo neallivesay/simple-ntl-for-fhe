@@ -95,7 +95,7 @@ def isqrt(k: int) -> int:
 
     Notes
     -----
-    Implementation based on Heron's method.
+    Heron's method.
 
     Examples
     --------
@@ -121,10 +121,10 @@ def is_prime(x: int) -> bool:
 
     Notes
     -----
-    Slow, brute-force implementation. Note that probabilistic primality
-    tests (such as Miller--Rabin) can offer vastly superior performance
-    at the cost of introducing a small likelihood of returning a false
-    positive.
+    Generates primes with bit-length `leng` that are "NTT friendly" for
+    Brute-force implementation. Note that probabilistic primality tests
+    (such as Miller--Rabin) can offer vastly superior runtime but
+    introduces a small likelihood of returning a false positive.
 
     Examples
     --------
@@ -145,7 +145,7 @@ def is_probably_prime(x: int) -> bool:
     r""" Probabilistic primality test.
 
     Determines if an integer (greater than two) is "probably" prime.
-    May return a false positive, but never returns false negatives
+    May return a false positive, but never returns false negatives.
 
     Notes
     -----
