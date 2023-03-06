@@ -70,6 +70,8 @@ def bit_reverse_permute(x: list) -> list:
     Permutes the entries `x` by mapping `x[i]` to `x[br(i)]`, where 
     `br` denotes the `k`-bit bit-reversal. Modifies `x` in-place.
 
+    Examples
+    --------
     >>> bit_reverse_permute([0, 1, 2, 3])
     [0, 2, 1, 3]
     >>> bit_reverse_permute([0, 1, 2, 3, 4, 5, 6, 7])
@@ -94,7 +96,7 @@ def isqrt(k: int) -> int:
 
     Notes
     -----
-    Implementation based on Heron's method.
+    Heron's method.
 
     Examples
     --------
@@ -120,10 +122,10 @@ def is_prime(x: int) -> bool:
 
     Notes
     -----
-    Slow, brute-force implementation. Note that probabilistic primality
-    tests (such as Miller--Rabin) can offer vastly superior performance
-    at the cost of introducing a small likelihood of returning a false
-    positive.
+    Generates primes with bit-length `leng` that are "NTT friendly" for
+    Brute-force implementation. Note that probabilistic primality tests
+    (such as Miller--Rabin) can offer vastly superior runtime but
+    introduces a small likelihood of returning a false positive.
 
     Examples
     --------
@@ -144,7 +146,7 @@ def is_probably_prime(x: int) -> bool:
     r""" Probabilistic primality test.
 
     Determines if an integer (greater than two) is "probably" prime.
-    May return a false positive, but never returns false negatives
+    May return a false positive, but never returns false negatives.
 
     Notes
     -----
@@ -258,7 +260,7 @@ def primitive_root(N: int, q: int) -> int:
     A brute-force approach to finding one of these primitive roots
     might involve searching through all integers from `1` to `q-1` and
     testing if it is a primitive root. As the likelihood of any given
-    integer being a root is '(q-1)/N', this search can be slow when `q`
+    integer being a root is `(q-1)/N`, this search can be slow when `q`
     is large relative to `N`. The implementation below uses an 
     alternative approach, leveraging the fact that if `x` is nonzero,
     then `x` raised to the power of `(q-1)/N` is always a root. The 
