@@ -1,3 +1,4 @@
 *.py~
 *.c
 barrett.py
+.gitignore~
