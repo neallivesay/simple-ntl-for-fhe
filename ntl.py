@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 r"""
 A simple Number Theoretic Library for FHE (Python version)
 

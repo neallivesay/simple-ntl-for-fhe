@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 r"""
 Basic implementations of the Number Theoretic Transform (NTT)
 
